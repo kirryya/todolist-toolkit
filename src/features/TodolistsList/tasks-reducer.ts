@@ -13,12 +13,24 @@ const slice = createSlice({
     initialState,
     reducers: {
         removeTaskAC(state, action: PayloadAction<{ taskId: string, todolistId: string }>) {
+            const tasks = state[action.payload.todolistId];
+            const index = tasks.findIndex( t => t.id === action.payload.taskId);
+            if (index > -1) {
+                tasks.splice(index, 1)
+            }
         },
         addTaskAC(state, action: PayloadAction<{ task: TaskType }>) {
+            state[action.payload.task.todoListId].unshift(action.payload.task)
         },
         updateTaskAC(state, action: PayloadAction<{ taskId: string, model: UpdateDomainTaskModelType, todolistId: string }>) {
+            const tasks = state[action.payload.todolistId];
+            const index = tasks.findIndex( t => t.id === action.payload.taskId);
+            if (index > -1) {
+                tasks[index] = {...tasks[index], ...action.payload.model}
+            }
         },
         setTasksAC(state, action: PayloadAction<{ tasks: Array<TaskType>, todolistId: string }>) {
+            state[action.payload.todolistId] = action.payload.tasks
         },
     }
 })
@@ -28,16 +40,6 @@ export const {removeTaskAC, addTaskAC, updateTaskAC, setTasksAC} = slice.actions
 
 export const _tasksReducer = (state: TasksStateType = initialState, action: any): TasksStateType => {
     switch (action.type) {
-        case 'REMOVE-TASK':
-            return {...state, [action.todolistId]: state[action.todolistId].filter(t => t.id !== action.taskId)}
-        case 'ADD-TASK':
-            return {...state, [action.task.todoListId]: [action.task, ...state[action.task.todoListId]]}
-        case 'UPDATE-TASK':
-            return {
-                ...state,
-                [action.todolistId]: state[action.todolistId]
-                    .map(t => t.id === action.taskId ? {...t, ...action.model} : t)
-            }
         case addTodolistAC.type:
             return {...state, [action.payload.todolist.id]: []}
         case removeTodolistAC.type:
@@ -51,8 +53,6 @@ export const _tasksReducer = (state: TasksStateType = initialState, action: any)
             })
             return copyState
         }
-        case 'SET-TASKS':
-            return {...state, [action.todolistId]: action.tasks}
         default:
             return state
     }
